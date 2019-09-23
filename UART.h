@@ -11,10 +11,13 @@
 #define TIVA2 2
 #define TIVA_TYPE TIVA1
 
+extern volatile uint8_t TimeState;
+
 #if TIVA_TYPE == TIVA1
 
 extern volatile uint32_t time;
 extern volatile uint32_t speed;
+
 
 #elif TIVA_TYPE == TIVA2
 extern volatile uint32_t Distance;

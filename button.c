@@ -31,45 +31,64 @@ void Button_press(void)
 {
 #if TIVA_TYPE==TIVA1
     /*For tiva 1*/
-    if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0)
+    if(TimeState == START_TIME)
     {
-        speed++;
-        UARTCharPut(UART3_BASE, time);
-        UARTCharPut(UART3_BASE, speed);
-    }
-    while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0);
-    if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ==0)
-    {
-        if(speed > 0)
+        if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0)
         {
-            speed--;
+            speed+=10;
+            UARTprintf("Speed: %d\n",speed);
             UARTCharPut(UART3_BASE, time);
             UARTCharPut(UART3_BASE, speed);
         }
+        while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0);
+        if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ==0)
+        {
+            if(speed > 0)
+            {
+                speed-=10;
+                UARTprintf("Speed: %d\n",speed);
+                UARTCharPut(UART3_BASE, time);
+                UARTCharPut(UART3_BASE, speed);
+            }
 
+        }
+        while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);
     }
-    while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);
 #elif TIVA_TYPE==TIVA2
     /* flag */
 
     /*for tiva 2*/
-    if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0)
+    if(TimeState == END_TIME)
     {
-        UARTCharPut(UART3_BASE, START_TIME);
-
+        if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0)
+        {
+            UARTCharPut(UART3_BASE, START_TIME);
+            TimeState = START_TIME;
+            UARTprintf("Measure start\n");
+            while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0);
+        }
+        else
+        {
+            /*Do nothing*/
+        }
     }
-    while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_0) == 0);
-    if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ==0)
+    else if(TimeState == START_TIME)
     {
-        UARTCharPut(UART3_BASE, END_TIME);
-        RecentTime = UARTCharGet (UART3_BASE);
-        RecentSpeed = UARTCharGet (UART3_BASE );
-        Distance += ((RecentTime-OldTime)*OldSpeed);
-        OldSpeed = RecentSpeed;
-        OldTime = RecentTime;
-        UARTprintf("%d\n", Distance);
-
+        if(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) ==0)
+        {
+            UARTCharPut(UART3_BASE, END_TIME);
+            RecentTime = UARTCharGet (UART3_BASE);
+            RecentSpeed = UARTCharGet (UART3_BASE );
+            Distance += ((RecentTime-OldTime)*OldSpeed);
+            OldSpeed = RecentSpeed;
+            OldTime = RecentTime;
+            UARTprintf("All Distance: %d\n", Distance);
+            while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);
+        }
+        else
+        {
+            /*Do Nothing*/
+        }
     }
-    while(GPIOPinRead(GPIO_PORTF_BASE, GPIO_PIN_4) == 0);
 #endif
 }

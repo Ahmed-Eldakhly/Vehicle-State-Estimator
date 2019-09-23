@@ -1,6 +1,8 @@
 
 #include "UART.h"
 
+volatile uint8_t TimeState = END_TIME;
+
 #if TIVA_TYPE == TIVA1
 volatile uint32_t speed=0;
 
@@ -50,23 +52,38 @@ void vUART_UART3Handler(void)
         UARTCharPut(UART3_BASE, time);
         UARTCharPut(UART3_BASE, speed);
         Startcheck = END_TIME;
+        TimeState = START_TIME;
+
     }
     else if((Startcheck == END_TIME) && (UARTCharGet (UART3_BASE ) == END_TIME))
     {
         UARTCharPut(UART3_BASE, time);
         UARTCharPut(UART3_BASE, speed);
         Startcheck = START_TIME;
+        TimeState = END_TIME;
     }
 }
 #elif TIVA_TYPE == TIVA2
 /*for tiva 2*/
 void vUART_UART3Handler(void)
 {
-RecentTime = UARTCharGet (UART3_BASE);
-RecentSpeed = UARTCharGet (UART3_BASE );
-Distance += ((RecentTime-OldTime)*OldSpeed);
-OldSpeed = RecentSpeed;
-OldTime = RecentTime;
+    if(TimeState == END_TIME)
+    {
+        OldTime = UARTCharGet (UART3_BASE );
+        OldSpeed = UARTCharGet (UART3_BASE );
+        UARTprintf("Start Time to Measure: %d\n", OldTime);
+        UARTprintf("Start Speed to Measure: %d\n", OldSpeed);
+    }
+    else if(TimeState == START_TIME)
+    {
+        RecentTime = UARTCharGet (UART3_BASE);
+        RecentSpeed = UARTCharGet (UART3_BASE );
+        Distance += ((RecentTime-OldTime)*OldSpeed);
+        OldSpeed = RecentSpeed;
+        OldTime = RecentTime;
+        UARTprintf("Speed was changed to: %d\n", RecentSpeed);
+        UARTprintf("Distance till now: %d\n", Distance);
+    }
 }
 #endif
 
